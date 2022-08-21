@@ -1,65 +1,82 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 
-export default function Home() {
+
+const URL = `http://localhost:8000/api/bears`
+
+
+export default () => {
+  const [bears, setBears] = useState({})
+  const [bear, setBear] = useState('')
+  const [name,setName] = useState('')
+  const [weight,setWeight] = useState(0)
+
+
+  const getBears = async () => {
+    const result = await axios.get(URL)
+    setBears(result.data.list)
+  }
+
+  const getBear = async (id) => {
+    const result = await axios.get(`${URL}/${id}`)
+    console.log('bear id: ', result.data)
+    setBear(result.data)
+  }
+
+  const addBear = async (name, weight) => {
+    const result = await axios.post(URL,{
+      name,
+      weight
+    })
+    console.log(result.data)
+    getBears()
+  }
+
+  const deleteBear = async (id) => {
+      const result = await axios.delete(`${URL}/${id}`)
+      console.log(result.data)
+      getBears()
+  }
+
+  const updateBear = async (id) => {
+      const result = await axios.put(`${URL}/${id}`,{
+        name,
+        weight
+      })
+      console.log('bear id update: ', result.data)
+      getBears()
+  }
+
+  const printBears = () => {
+      console.log('Bears:', bears)
+      if (bears && bears.length)
+        return (bears.map((bear, index) =>
+          (<li key={index}>
+              {(bear)?bear.name:'-'} : {(bear)?bear.weight:0}
+              <button onClick={() => deleteBear(bear.id)}> Delete </button>
+              <button onClick={() => getBear(bear.id)}>Get</button>
+              <button onClick={() => updateBear(bear.id)}>Update</button>
+          </li>)
+        ))
+      else {
+        return (<h2>No bears</h2>)
+      }
+  }
+
+  useEffect(() => {
+    getBears()
+  },[])
+      
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+    <div>
+        <h2>Bears</h2>
+        <ul>{printBears()}</ul>
+          selected bear: {bear.name} {bear.weight}
+          <h2>Add bear</h2>
+          Name:<input type="text" onChange={(e)=>setName(e.target.value)} /> <br/>
+          Weight:<input type="number" onChange={(e)=>setWeight(e.target.value)} />
+        <br/>
+          <button onClick={ () => addBear(name, weight)}>Add new bear</button>
     </div>
   )
 }
